@@ -1,11 +1,11 @@
 import requests
 import os
 
-# === CONFIG (DO NOT CHANGE THESE LINES) ===
+# === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 5000      # ₦ minimum profit to alert
-TRADE_AMOUNT = 100           # Calculate profit for this many USDT (change if you want)
+PROFIT_THRESHOLD = 5000      # Change to 3000 if you want more alerts
+TRADE_AMOUNT = 100
 
 def get_p2p_offers(trade_type):
     url = "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"
@@ -17,16 +17,25 @@ def get_p2p_offers(trade_type):
         "rows": 20,
         "payTypes": [],
         "transAmount": "",
-        "publisherType": None
+        "publisherType": None,
+        "countries": [],          # Added - this often fixes empty responses
     }
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Origin": "https://p2p.binance.com",
+        "Referer": "https://p2p.binance.com/"
     }
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=15)
+        print(f"Status code for {trade_type}: {response.status_code}")
+        print(f"Response preview: {response.text[:400]}...")  # Debug
+        
         response.raise_for_status()
         data = response.json()
+        
         offers = []
         for item in data.get("data", []):
             adv = item.get("adv", {})
@@ -39,26 +48,28 @@ def get_p2p_offers(trade_type):
                 "username": item.get("advertiser", {}).get("nickName", "Unknown"),
                 "payments": [m.get("payMethodName", "") for m in item.get("payMethods", []) if m]
             })
+        print(f"Found {len(offers)} offers for {trade_type}")
         return offers
     except Exception as e:
-        print(f"Error fetching {trade_type}: {e}")
+        print(f"ERROR fetching {trade_type}: {e}")
+        if 'response' in locals():
+            print(f"Status: {response.status_code}")
+            print(f"Raw response: {response.text[:600]}")
         return []
 
 if __name__ == "__main__":
     print("🔄 Fetching live Binance P2P USDT/NGN rates...")
 
-    sell_offers = get_p2p_offers("SELL")   # cheapest to BUY USDT
-    buy_offers  = get_p2p_offers("BUY")    # highest to SELL USDT
+    sell_offers = get_p2p_offers("SELL")   # Buy USDT cheap
+    buy_offers  = get_p2p_offers("BUY")    # Sell USDT expensive
 
     if not sell_offers or not buy_offers:
-        print("No offers right now.")
+        print("No offers right now (or API issue).")
     else:
-        # Best BUY price (you buy USDT cheap)
         valid_sell = [o for o in sell_offers if o["available"] > 50 and o["min_trans"] <= 200]
         min_buy_price = min((o["price"] for o in valid_sell), default=0)
         best_buy = min(valid_sell, key=lambda o: o["price"]) if valid_sell else None
 
-        # Best SELL price (you sell USDT expensive)
         valid_buy = [o for o in buy_offers if o["available"] > 50 and o["min_trans"] <= 200]
         max_sell_price = max((o["price"] for o in valid_buy), default=0)
         best_sell = max(valid_buy, key=lambda o: o["price"]) if valid_buy else None
@@ -82,14 +93,14 @@ if __name__ == "__main__":
 📈 Spread: {spread:.2f} NGN/USDT
 💵 Profit on {TRADE_AMOUNT} USDT: <b>₦{profit:,.0f}</b>
 
-🔗 Buy link: https://p2p.binance.com/en/trade/sell/USDT?fiat=NGN
-🔗 Sell link: https://p2p.binance.com/en/trade/buy/USDT?fiat=NGN
+🔗 Buy: https://p2p.binance.com/en/trade/sell/USDT?fiat=NGN
+🔗 Sell: https://p2p.binance.com/en/trade/buy/USDT?fiat=NGN
 
-Act fast — these windows disappear quickly!"""
+Act fast!"""
             
             tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
             payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
             requests.post(tg_url, json=payload)
             print("✅ Alert sent to your Telegram!")
         else:
-            print("No opportunity above ₦5,000 yet.")
+            print("No opportunity above threshold yet.")
