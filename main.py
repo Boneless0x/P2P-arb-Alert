@@ -1,79 +1,61 @@
 import requests
-from bs4 import BeautifulSoup
 import os
-import re
+import random
 
 # === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 5000
-TRADE_AMOUNT = 100
 
-def get_remitano_prices():
-    url = "https://remitano.net/ng/p2p/usdt"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0 Safari/537.36"
+# Your niche – change this line to whatever you want
+NICHE = "crypto P2P arbitrage Nigeria"   # ←←← CHANGE THIS TO YOUR NICHE
+
+def generate_growth_pack():
+    # This is where the magic happens – tailored content ideas
+    packs = {
+        "crypto P2P arbitrage Nigeria": [
+            "Just caught a ₦8,200 spread on Bybit vs Remitano in 11 minutes 👀 Who else is flipping USDT today? Drop your best platform below.",
+            "Thread: How I turned ₦150k into ₦380k in one week with P2P (no gambling, no signals). Step 1–5 inside 👇",
+            "Pro tip for Nigeria: The biggest P2P spreads happen between 6–9 AM and 8–11 PM. Set your alerts accordingly.",
+            "If you’re still manually checking rates every hour, you’re leaving money on the table. Here’s the 15-minute scanner I use →",
+            "Quick poll: What’s your main payment method for P2P right now? Opay / PalmPay / Bank transfer / Other"
+        ]
+        # Add more niches later if you want
     }
-    try:
-        response = requests.get(url, headers=headers, timeout=15)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        text = soup.get_text()
+    
+    tweets = packs.get(NICHE.lower(), packs["crypto P2P arbitrage Nigeria"])
+    selected_tweets = random.sample(tweets, 5)
+    
+    # Engagement tasks (ethical)
+    engagement = [
+        "Like + reply to the last 3 posts from @binance, @Bybit_Official, @remitano",
+        "Quote-tweet any P2P success story you see with your own tip",
+        "Reply to 5 people asking about USDT rates today",
+        "Find 3 new Nigerian crypto accounts posting today and engage genuinely",
+        "Post one value thread and pin it"
+    ]
+    
+    message = f"""🚀 <b>YOUR DAILY X GROWTH PACK</b> 🚀
 
-        # Stronger pattern for Remitano's price format (after ###### and normal prices)
-        price_pattern = r'(?:######\s*)?(\d{1,3}(?:,\d{3})*\.\d{2})'
-        prices = [float(x.replace(',', '')) for x in re.findall(price_pattern, text) if 1000 < float(x.replace(',', '')) < 2000]
+Niche: {NICHE}
 
-        print(f"Raw prices extracted: {prices}")
-
-        if not prices:
-            print("Still no prices found. Page preview:")
-            print(text[:500])  # Show beginning of page for debugging
-            return None, None
-
-        min_buy = min(prices)
-        max_sell = max(prices)
-
-        print(f"Found {len(prices)} prices")
-        print(f"Lowest buy price : {min_buy:.2f} NGN/USDT")
-        print(f"Highest sell price: {max_sell:.2f} NGN/USDT")
-        return min_buy, max_sell
-
-    except Exception as e:
-        print(f"Error fetching Remitano: {e}")
-        return None, None
+📝 5 Ready-to-Post Tweets:
+"""
+    for i, tweet in enumerate(selected_tweets, 1):
+        message += f"\n{i}. {tweet}\n"
+    
+    message += f"\n\n🔥 Engagement Tasks (do 3–5 of these):\n"
+    for task in engagement:
+        message += f"• {task}\n"
+    
+    message += "\n\nPost 3–5 times today + engage for 20–30 mins = fastest organic growth with zero risk."
+    
+    return message
 
 if __name__ == "__main__":
-    print("🔄 Fetching live Remitano P2P USDT/NGN rates...")
-
-    min_buy, max_sell = get_remitano_prices()
-
-    if min_buy is None or max_sell is None:
-        print("No offers right now.")
-    else:
-        spread = max_sell - min_buy
-        profit = spread * TRADE_AMOUNT
-
-        print(f"Buy at : {min_buy:.2f} NGN/USDT")
-        print(f"Sell at: {max_sell:.2f} NGN/USDT")
-        print(f"Profit on {TRADE_AMOUNT} USDT: ₦{profit:,.0f}")
-
-        if profit > PROFIT_THRESHOLD and spread > 0:
-            message = f"""🚨 <b>REMITANO P2P ARBITRAGE ALERT</b> 🚨
-
-💰 Buy USDT at: <b>{min_buy:.2f}</b> NGN
-💰 Sell USDT at: <b>{max_sell:.2f}</b> NGN
-
-📈 Spread: {spread:.2f} NGN/USDT
-💵 Profit on {TRADE_AMOUNT} USDT: <b>₦{profit:,.0f}</b>
-
-🔗 Open Remitano: https://remitano.net/ng/p2p/usdt
-
-Act fast!"""
-
-            tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-            payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
-            requests.post(tg_url, json=payload)
-            print("✅ Alert sent to your Telegram!")
-        else:
-            print("No opportunity above ₦5,000 yet.")
+    print("🔄 Generating your X Growth Pack...")
+    pack = generate_growth_pack()
+    
+    tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {"chat_id": CHAT_ID, "text": pack, "parse_mode": "HTML"}
+    requests.post(tg_url, json=payload)
+    print("✅ Growth Pack sent to your Telegram!")
