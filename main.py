@@ -18,16 +18,19 @@ def get_remitano_prices():
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-
         text = soup.get_text()
-        prices = [float(x.replace(',', '')) for x in re.findall(r'\d{1,3}(?:,\d{3})*\.\d{2}', text) if 1000 < float(x.replace(',', '')) < 2000]
+
+        # Improved regex that catches prices after ###### and normal decimal prices
+        price_pattern = r'(?:######\s*)?(\d{1,3}(?:,\d{3})*\.\d{2})'
+        prices = [float(x.replace(',', '')) for x in re.findall(price_pattern, text) if 1000 < float(x.replace(',', '')) < 2000]
 
         if not prices:
             print("No prices found on page")
+            print("Page preview (first 300 chars):", text[:300])
             return None, None
 
-        min_buy = min(prices)
-        max_sell = max(prices)
+        min_buy = min(prices)   # Cheapest to BUY USDT
+        max_sell = max(prices)  # Most expensive to SELL USDT
 
         print(f"Found {len(prices)} prices on page")
         print(f"Lowest buy price : {min_buy:.2f} NGN/USDT")
