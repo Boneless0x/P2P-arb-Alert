@@ -20,19 +20,21 @@ def get_remitano_prices():
         soup = BeautifulSoup(response.text, 'html.parser')
         text = soup.get_text()
 
-        # Improved regex that catches prices after ###### and normal decimal prices
+        # Stronger pattern for Remitano's price format (after ###### and normal prices)
         price_pattern = r'(?:######\s*)?(\d{1,3}(?:,\d{3})*\.\d{2})'
         prices = [float(x.replace(',', '')) for x in re.findall(price_pattern, text) if 1000 < float(x.replace(',', '')) < 2000]
 
+        print(f"Raw prices extracted: {prices}")
+
         if not prices:
-            print("No prices found on page")
-            print("Page preview (first 300 chars):", text[:300])
+            print("Still no prices found. Page preview:")
+            print(text[:500])  # Show beginning of page for debugging
             return None, None
 
-        min_buy = min(prices)   # Cheapest to BUY USDT
-        max_sell = max(prices)  # Most expensive to SELL USDT
+        min_buy = min(prices)
+        max_sell = max(prices)
 
-        print(f"Found {len(prices)} prices on page")
+        print(f"Found {len(prices)} prices")
         print(f"Lowest buy price : {min_buy:.2f} NGN/USDT")
         print(f"Highest sell price: {max_sell:.2f} NGN/USDT")
         return min_buy, max_sell
@@ -65,7 +67,7 @@ if __name__ == "__main__":
 📈 Spread: {spread:.2f} NGN/USDT
 💵 Profit on {TRADE_AMOUNT} USDT: <b>₦{profit:,.0f}</b>
 
-🔗 Open Remitano P2P: https://remitano.net/ng/p2p/usdt
+🔗 Open Remitano: https://remitano.net/ng/p2p/usdt
 
 Act fast!"""
 
