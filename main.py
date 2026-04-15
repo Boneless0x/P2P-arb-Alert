@@ -6,7 +6,7 @@ import re
 # === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 5000      # ₦ minimum profit to alert
+PROFIT_THRESHOLD = 5000
 TRADE_AMOUNT = 100
 
 def get_remitano_prices():
@@ -19,7 +19,6 @@ def get_remitano_prices():
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Extract all price-like numbers (Remitano shows them as e.g. 1,389.76)
         text = soup.get_text()
         prices = [float(x.replace(',', '')) for x in re.findall(r'\d{1,3}(?:,\d{3})*\.\d{2}', text) if 1000 < float(x.replace(',', '')) < 2000]
 
@@ -27,8 +26,8 @@ def get_remitano_prices():
             print("No prices found on page")
             return None, None
 
-        min_buy = min(prices)   # cheapest to BUY USDT
-        max_sell = max(prices)  # most expensive to SELL USDT
+        min_buy = min(prices)
+        max_sell = max(prices)
 
         print(f"Found {len(prices)} prices on page")
         print(f"Lowest buy price : {min_buy:.2f} NGN/USDT")
