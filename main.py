@@ -4,7 +4,7 @@ import os
 # === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 0      # Lower to 3000 if you want more frequent alerts
+PROFIT_THRESHOLD = 5000
 TRADE_AMOUNT = 100
 
 def get_p2p_offers(trade_type):
@@ -38,7 +38,7 @@ def get_p2p_offers(trade_type):
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=15)
         print(f"Status code for {trade_type}: {response.status_code}")
-        print(f"Response preview: {response.text[:500]}...")  # shortened
+        print(f"Response preview: {response.text[:500]}...")
         
         response.raise_for_status()
         data = response.json()
@@ -66,8 +66,8 @@ def get_p2p_offers(trade_type):
 if __name__ == "__main__":
     print("🔄 Fetching live Binance P2P USDT/NGN rates...")
 
-    sell_offers = get_p2p_offers("SELL")   # Buy cheap
-    buy_offers  = get_p2p_offers("BUY")    # Sell expensive
+    sell_offers = get_p2p_offers("SELL")
+    buy_offers  = get_p2p_offers("BUY")
 
     if not sell_offers or not buy_offers:
         print("Still no offers (rare).")
@@ -110,9 +110,10 @@ Act fast!"""
             print("✅ Alert sent to your Telegram!")
         else:
             print("No opportunity above ₦5,000 yet.")
-              # === FORCE TEST ALERT - REMOVE AFTER YOU SEE IT ===
-        print("✅ SENDING TEST ALERT NOW...")
-        message = """🚨 <b>TEST ALERT - BOT IS WORKING 100%</b> 🚨
+
+    # === FORCE TEST ALERT - REMOVE AFTER YOU RECEIVE IT ===
+    print("✅ SENDING TEST ALERT NOW...")
+    message = """🚨 <b>TEST ALERT - YOUR BOT IS WORKING 100%</b> 🚨
 
 Your P2P Arbitrage Scanner is now LIVE on GitHub!
 
@@ -122,9 +123,9 @@ Your P2P Arbitrage Scanner is now LIVE on GitHub!
 
 (Real profit alerts will start as soon as Binance has offers again)
 
-You can now delete this test block."""
+Delete lines 98-108 from main.py after you see this message."""
 
-        tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
-        requests.post(tg_url, json=payload)
-        print("✅ TEST Alert sent to your Telegram!")
+    tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
+    requests.post(tg_url, json=payload)
+    print("✅ TEST Alert sent to your Telegram!")
