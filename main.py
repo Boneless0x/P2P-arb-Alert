@@ -4,7 +4,7 @@ import os
 # === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 5000      # Change to 3000 if you want more alerts
+PROFIT_THRESHOLD = 5000      # Lower to 3000 if you want more frequent alerts
 TRADE_AMOUNT = 100
 
 def get_p2p_offers(trade_type):
@@ -17,8 +17,15 @@ def get_p2p_offers(trade_type):
         "rows": 20,
         "payTypes": [],
         "transAmount": "",
+        "countries": [],
+        "proMerchantAds": False,
+        "shieldMerchantAds": False,
+        "filterType": "all",
+        "periods": [],
+        "additionalKycVerifyFilter": 0,
         "publisherType": None,
-        "countries": [],          # Added - this often fixes empty responses
+        "merchantCheck": False,
+        "classifies": ["mass", "profession", "fiat_trade"]
     }
     headers = {
         "Content-Type": "application/json",
@@ -31,7 +38,7 @@ def get_p2p_offers(trade_type):
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=15)
         print(f"Status code for {trade_type}: {response.status_code}")
-        print(f"Response preview: {response.text[:400]}...")  # Debug
+        print(f"Response preview: {response.text[:500]}...")  # shortened
         
         response.raise_for_status()
         data = response.json()
@@ -53,18 +60,17 @@ def get_p2p_offers(trade_type):
     except Exception as e:
         print(f"ERROR fetching {trade_type}: {e}")
         if 'response' in locals():
-            print(f"Status: {response.status_code}")
             print(f"Raw response: {response.text[:600]}")
         return []
 
 if __name__ == "__main__":
     print("🔄 Fetching live Binance P2P USDT/NGN rates...")
 
-    sell_offers = get_p2p_offers("SELL")   # Buy USDT cheap
-    buy_offers  = get_p2p_offers("BUY")    # Sell USDT expensive
+    sell_offers = get_p2p_offers("SELL")   # Buy cheap
+    buy_offers  = get_p2p_offers("BUY")    # Sell expensive
 
     if not sell_offers or not buy_offers:
-        print("No offers right now (or API issue).")
+        print("Still no offers (rare).")
     else:
         valid_sell = [o for o in sell_offers if o["available"] > 50 and o["min_trans"] <= 200]
         min_buy_price = min((o["price"] for o in valid_sell), default=0)
@@ -85,10 +91,10 @@ if __name__ == "__main__":
             message = f"""🚨 <b>P2P ARBITRAGE ALERT</b> 🚨
 
 💰 Buy USDT at: <b>{min_buy_price:.2f}</b> NGN
-👤 {best_buy['username']} ({', '.join(best_buy['payments'][:2])})
+👤 {best_buy['username']}
 
 💰 Sell USDT at: <b>{max_sell_price:.2f}</b> NGN
-👤 {best_sell['username']} ({', '.join(best_sell['payments'][:2])})
+👤 {best_sell['username']}
 
 📈 Spread: {spread:.2f} NGN/USDT
 💵 Profit on {TRADE_AMOUNT} USDT: <b>₦{profit:,.0f}</b>
@@ -103,4 +109,4 @@ Act fast!"""
             requests.post(tg_url, json=payload)
             print("✅ Alert sent to your Telegram!")
         else:
-            print("No opportunity above threshold yet.")
+            print("No opportunity above ₦5,000 yet.")
