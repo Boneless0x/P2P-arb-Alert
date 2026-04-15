@@ -4,7 +4,7 @@ import os
 # === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 5000      # Lower to 3000 if you want more frequent alerts
+PROFIT_THRESHOLD = 0      # Lower to 3000 if you want more frequent alerts
 TRADE_AMOUNT = 100
 
 def get_p2p_offers(trade_type):
