@@ -1,12 +1,12 @@
-name: Remitano P2P Arbitrage Alert
+name: X Growth Engine
 
 on:
   schedule:
-    - cron: '*/15 * * * *'     # Every 15 minutes
+    - cron: '0 */4 * * *'     # Every 4 hours
   workflow_dispatch:
 
 jobs:
-  run-alert:
+  run-engine:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,10 +16,10 @@ jobs:
         with:
           python-version: '3.12'
       
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4
+      - name: Install requests
+        run: pip install requests
       
-      - name: Run arbitrage script
+      - name: Run growth engine
         run: python main.py
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
