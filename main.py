@@ -4,7 +4,7 @@ import os
 # === CONFIG ===
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-PROFIT_THRESHOLD = 5000
+PROFIT_THRESHOLD = 5000      # Only alert when profit > ₦5,000 on 100 USDT
 TRADE_AMOUNT = 100
 
 def get_p2p_offers(trade_type):
@@ -37,9 +37,6 @@ def get_p2p_offers(trade_type):
     }
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=15)
-        print(f"Status code for {trade_type}: {response.status_code}")
-        print(f"Response preview: {response.text[:500]}...")
-        
         response.raise_for_status()
         data = response.json()
         
@@ -55,12 +52,9 @@ def get_p2p_offers(trade_type):
                 "username": item.get("advertiser", {}).get("nickName", "Unknown"),
                 "payments": [m.get("payMethodName", "") for m in item.get("payMethods", []) if m]
             })
-        print(f"Found {len(offers)} offers for {trade_type}")
         return offers
     except Exception as e:
         print(f"ERROR fetching {trade_type}: {e}")
-        if 'response' in locals():
-            print(f"Raw response: {response.text[:600]}")
         return []
 
 if __name__ == "__main__":
@@ -70,7 +64,7 @@ if __name__ == "__main__":
     buy_offers  = get_p2p_offers("BUY")
 
     if not sell_offers or not buy_offers:
-        print("Still no offers (rare).")
+        print("Still no offers right now.")
     else:
         valid_sell = [o for o in sell_offers if o["available"] > 50 and o["min_trans"] <= 200]
         min_buy_price = min((o["price"] for o in valid_sell), default=0)
@@ -110,22 +104,3 @@ Act fast!"""
             print("✅ Alert sent to your Telegram!")
         else:
             print("No opportunity above ₦5,000 yet.")
-
-    # === FORCE TEST ALERT - REMOVE AFTER YOU RECEIVE IT ===
-    print("✅ SENDING TEST ALERT NOW...")
-    message = """🚨 <b>TEST ALERT - YOUR BOT IS WORKING 100%</b> 🚨
-
-Your P2P Arbitrage Scanner is now LIVE on GitHub!
-
-✅ API connection: OK  
-✅ Telegram connection: OK  
-✅ Runs automatically every hour  
-
-(Real profit alerts will start as soon as Binance has offers again)
-
-Delete lines 98-108 from main.py after you see this message."""
-
-    tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
-    requests.post(tg_url, json=payload)
-    print("✅ TEST Alert sent to your Telegram!")
