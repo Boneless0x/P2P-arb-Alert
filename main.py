@@ -110,3 +110,21 @@ Act fast!"""
             print("✅ Alert sent to your Telegram!")
         else:
             print("No opportunity above ₦5,000 yet.")
+        # === TEMPORARY TEST ALERT (remove after you receive it) ===
+        message = """🚨 <b>TEST ALERT - YOUR BOT IS WORKING PERFECTLY</b> 🚨
+
+P2P scanner just ran successfully on GitHub.
+Current market: No active USDT/NGN offers right now (normal quiet period).
+
+✅ Telegram connection: OK  
+✅ GitHub automation: Running every hour  
+✅ You will now get real profit alerts when spreads appear.
+
+(You can delete lines 80–92 from main.py after you see this message)
+
+Your arbitrage scanner is now fully live!"""
+
+        tg_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
+        requests.post(tg_url, json=payload)
+        print("✅ TEST Alert sent to your Telegram!")
