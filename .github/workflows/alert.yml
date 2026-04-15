@@ -1,0 +1,26 @@
+name: P2P Arbitrage Alert
+
+on:
+  schedule:
+    - cron: '0 * * * *'     # Runs every hour on the hour
+  workflow_dispatch:        # Allows you to test manually
+
+jobs:
+  run-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install requests
+        run: pip install requests
+      
+      - name: Run arbitrage script
+        run: python main.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
